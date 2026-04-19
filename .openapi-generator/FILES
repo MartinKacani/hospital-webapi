@@ -1,6 +1,8 @@
 internal/hospital_wl/README.md
 internal/hospital_wl/api_hospital_conditions.go
 internal/hospital_wl/api_hospital_waiting_list.go
+internal/hospital_wl/api_hospitals.go
 internal/hospital_wl/model_condition.go
+internal/hospital_wl/model_hospital.go
 internal/hospital_wl/model_waiting_list_entry.go
 internal/hospital_wl/routers.go

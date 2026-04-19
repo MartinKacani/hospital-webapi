@@ -14,5 +14,14 @@ func NewHospitalConditionsApi() HospitalConditionsAPI {
 }
 
 func (o implHospitalConditionsAPI) GetConditions(c *gin.Context) {
-    c.AbortWithStatus(http.StatusNotImplemented)
+    updateHospitalFunc(c, func(
+        c *gin.Context,
+        hospital *Hospital,
+    ) (updatedHospital *Hospital, responseContent interface{}, status int) {
+        result := hospital.PredefinedConditions
+        if result == nil {
+            result = []Condition{}
+        }
+        return nil, result, http.StatusOK
+    })
 }
