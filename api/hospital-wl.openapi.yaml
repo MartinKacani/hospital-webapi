@@ -3,193 +3,185 @@ servers:
   - description: Cluster Endpoint
     url: /api
 info:
-  description: Hospital Waiting List management for Web-In-Cloud system
+  description: MedBed - Bed reservation and hospitalization planning for Web-In-Cloud system
   version: "1.0.0"
-  title: Waiting List Api
+  title: MedBed Api
   contact:
     email: xkacani@stuba.sk
   license:
     name: CC BY 4.0
     url: "https://creativecommons.org/licenses/by/4.0/"
 tags:
-- name: hospitalWaitingList
-  description: Hospital Waiting List API
-- name: hospitalConditions
-  description: Patient conditions and symptoms handled in the hospital
-- name: hospitals
-  description: Hospital details
+- name: reservations
+  description: Reservation management (for referring doctors)
+- name: stays
+  description: Hospitalization stay management (for department staff)
+- name: departments
+  description: Hospital department management
 
 paths:
-  "/waiting-list/{hospitalId}/entries":
-    get:
-      tags:
-        - hospitalWaitingList
-      summary: Provides the hospital waiting list
-      operationId: getWaitingListEntries
-      description: By using hospitalId you get list of entries in hospital waiting list
-      parameters:
-        - in: path
-          name: hospitalId
-          description: pass the id of the particular hospital
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: value of the waiting list entries
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/WaitingListEntry"
-              examples:
-                response:
-                  $ref: "#/components/examples/WaitingListEntriesExample"
-        "404":
-          description: Hospital with such ID does not exist
+  "/medbed/department":
     post:
       tags:
-        - hospitalWaitingList
-      summary: Saves new entry into waiting list
-      operationId: createWaitingListEntry
-      description: Use this method to store new entry into the waiting list.
-      parameters:
-        - in: path
-          name: hospitalId
-          description: pass the id of the particular hospital
-          required: true
-          schema:
-            type: string
+        - departments
+      summary: Creates a new department
+      operationId: createDepartment
+      description: Use this method to initialize a new hospital department in the system
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/WaitingListEntry"
+              $ref: "#/components/schemas/Department"
             examples:
               request-sample:
-                $ref: "#/components/examples/WaitingListEntryExample"
-        description: Waiting list entry to store
+                $ref: "#/components/examples/DepartmentExample"
+        description: Department details to store
         required: true
       responses:
         "200":
-          description: >-
-            Value of the waiting list entry with re-computed estimated time of
-            hospital entry
+          description: Value of stored department
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/WaitingListEntry"
-              examples:
-                updated-response:
-                  $ref: "#/components/examples/WaitingListEntryExample"
-        "400":
-          description: Missing mandatory properties of input object.
-        "404":
-          description: Hospital with such ID does not exists
-        "409":
-          description: Entry with the specified id already exists
-  "/hospital":
-    post:
-      tags:
-        - hospitals
-      summary: Saves new hospital definition
-      operationId: createHospital
-      description: Use this method to initialize new hospital in the system
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Hospital"
-            examples:
-              request-sample:
-                $ref: "#/components/examples/HospitalExample"
-        description: Hospital details to store
-        required: true
-      responses:
-        "200":
-          description: >-
-            Value of stored hospital
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Hospital"
-              examples:
-                updated-response:
-                  $ref: "#/components/examples/HospitalExample"
+                $ref: "#/components/schemas/Department"
         "400":
           description: Missing mandatory properties of input object.
         "409":
-          description: Entry with the specified id already exists
-  "/hospital/{hospitalId}":
+          description: Department with the specified id already exists
+
+  "/medbed/department/{departmentId}":
     delete:
       tags:
-        - hospitals
-      summary: Deletes specific hospital
-      operationId: deleteHospital
-      description: Use this method to delete the specific hospital from the system.
+        - departments
+      summary: Deletes a specific department
+      operationId: deleteDepartment
+      description: Use this method to delete the specific department from the system.
       parameters:
         - in: path
-          name: hospitalId
-          description: pass the id of the particular hospital
+          name: departmentId
+          description: pass the id of the particular department
           required: true
           schema:
             type: string
       responses:
         "204":
-          description: Item deleted
+          description: Department deleted
         "404":
-          description: Ambulance with such ID does not exist
-  "/waiting-list/{hospitalId}/entries/{entryId}":
+          description: Department with such ID does not exist
+
+  "/medbed/{departmentId}/reservations":
     get:
       tags:
-        - hospitalWaitingList
-      summary: Provides details about waiting list entry
-      operationId: getWaitingListEntry
-      description: >-
-        By using hospitalId and entryId you can details of particular entry
-        item hospital.
+        - reservations
+      summary: Returns list of reservations for the department
+      operationId: getReservations
+      description: Returns all reservations for the given department
       parameters:
         - in: path
-          name: hospitalId
-          description: pass the id of the particular hospital
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: entryId
-          description: pass the id of the particular entry in the waiting list
+          name: departmentId
+          description: pass the id of the particular department
           required: true
           schema:
             type: string
       responses:
         "200":
-          description: value of the waiting list entries
+          description: List of reservations
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/WaitingListEntry"
+                type: array
+                items:
+                  $ref: "#/components/schemas/Reservation"
               examples:
                 response:
-                  $ref: "#/components/examples/WaitingListEntryExample"
+                  $ref: "#/components/examples/ReservationsListExample"
         "404":
-          description: hospital or Entry with such ID does not exists
+          description: Department with such ID does not exist
+    post:
+      tags:
+        - reservations
+      summary: Creates a new reservation
+      operationId: createReservation
+      description: Use this method to create a new reservation for hospitalization.
+      parameters:
+        - in: path
+          name: departmentId
+          description: pass the id of the particular department
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Reservation"
+            examples:
+              request-sample:
+                $ref: "#/components/examples/ReservationExample"
+        description: Reservation to create
+        required: true
+      responses:
+        "200":
+          description: Created reservation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reservation"
+        "400":
+          description: Missing mandatory properties of input object.
+        "404":
+          description: Department with such ID does not exist
+        "409":
+          description: Reservation with the specified id already exists
+
+  "/medbed/{departmentId}/reservations/{reservationId}":
+    get:
+      tags:
+        - reservations
+      summary: Returns details of a single reservation
+      operationId: getReservation
+      description: Returns details of the specified reservation
+      parameters:
+        - in: path
+          name: departmentId
+          description: pass the id of the particular department
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: reservationId
+          description: pass the id of the particular reservation
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Reservation details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reservation"
+              examples:
+                response:
+                  $ref: "#/components/examples/ReservationExample"
+        "404":
+          description: Department or Reservation with such ID does not exist
     put:
       tags:
-        - hospitalWaitingList
-      summary: Updates specific entry
-      operationId: updateWaitingListEntry
-      description: Use this method to update content of the waiting list entry.
+        - reservations
+      summary: Updates a specific reservation
+      operationId: updateReservation
+      description: Use this method to update an existing reservation.
       parameters:
         - in: path
-          name: hospitalId
-          description: pass the id of the particular hospital
+          name: departmentId
+          description: pass the id of the particular department
           required: true
           schema:
             type: string
         - in: path
-          name: entryId
-          description: pass the id of the particular entry in the waiting list
+          name: reservationId
+          description: pass the id of the particular reservation
           required: true
           schema:
             type: string
@@ -197,280 +189,413 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/WaitingListEntry"
+              $ref: "#/components/schemas/Reservation"
             examples:
               request:
-                $ref: "#/components/examples/WaitingListEntryExample"
-        description: Waiting list entry to update
+                $ref: "#/components/examples/ReservationExample"
+        description: Reservation data to update
         required: true
       responses:
         "200":
-          description: >-
-            value of the waiting list entry with re-computed estimated time of
-            hospital entry
+          description: Updated reservation
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/WaitingListEntry"
-              examples:
-                response:
-                  $ref: "#/components/examples/WaitingListEntryExample"
-        "403":
-          description: >-
-            Value of the entryID and the data id is mismatching. Details are
-            provided in the response body.
+                $ref: "#/components/schemas/Reservation"
+        "400":
+          description: Invalid input data
         "404":
-          description: hospital or Entry with such ID does not exists
+          description: Department or Reservation with such ID does not exist
     delete:
       tags:
-        - hospitalWaitingList
-      summary: Deletes specific entry
-      operationId: deleteWaitingListEntry
-      description: Use this method to delete the specific entry from the waiting list.
+        - reservations
+      summary: Cancels/deletes a reservation
+      operationId: deleteReservation
+      description: Use this method to cancel a reservation.
       parameters:
         - in: path
-          name: hospitalId
-          description: pass the id of the particular hospital
+          name: departmentId
+          description: pass the id of the particular department
           required: true
           schema:
             type: string
         - in: path
-          name: entryId
-          description: pass the id of the particular entry in the waiting list
+          name: reservationId
+          description: pass the id of the particular reservation
           required: true
           schema:
             type: string
       responses:
         "204":
-          description: Item deleted
+          description: Reservation deleted
         "404":
-          description: hospital or Entry with such ID does not exists
-  "/waiting-list/{hospitalId}/condition":
+          description: Department or Reservation with such ID does not exist
+
+  "/medbed/{departmentId}/stays":
     get:
       tags:
-        - hospitalConditions
-      summary: Provides the list of conditions associated with hospital
-      operationId: getConditions
-      description: By using hospitalId you get list of predefined conditions
+        - stays
+      summary: Returns list of hospitalization stays
+      operationId: getStays
+      description: Returns all hospitalization stays for the given department
       parameters:
         - in: path
-          name: hospitalId
-          description: pass the id of the particular hospital
+          name: departmentId
+          description: pass the id of the particular department
           required: true
           schema:
             type: string
       responses:
         "200":
-          description: value of the predefined conditions
+          description: List of stays
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Condition"
+                  $ref: "#/components/schemas/HospitalizationStay"
               examples:
                 response:
-                  $ref: "#/components/examples/ConditionsListExample"
+                  $ref: "#/components/examples/StaysListExample"
         "404":
-          description: hospital with such ID does not exists
+          description: Department with such ID does not exist
+    post:
+      tags:
+        - stays
+      summary: Creates a new hospitalization stay
+      operationId: createStay
+      description: Use this method to create a hospitalization stay, optionally linked to a reservation.
+      parameters:
+        - in: path
+          name: departmentId
+          description: pass the id of the particular department
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HospitalizationStay"
+            examples:
+              request-sample:
+                $ref: "#/components/examples/StayExample"
+        description: Hospitalization stay to create
+        required: true
+      responses:
+        "200":
+          description: Created hospitalization stay
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HospitalizationStay"
+        "400":
+          description: Missing mandatory properties of input object.
+        "404":
+          description: Department with such ID does not exist
+        "409":
+          description: Stay with the specified id already exists
+
+  "/medbed/{departmentId}/stays/{stayId}":
+    get:
+      tags:
+        - stays
+      summary: Returns details of a single hospitalization stay
+      operationId: getStay
+      description: Returns details of the specified hospitalization stay
+      parameters:
+        - in: path
+          name: departmentId
+          description: pass the id of the particular department
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: stayId
+          description: pass the id of the particular stay
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Stay details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HospitalizationStay"
+        "404":
+          description: Department or Stay with such ID does not exist
+    put:
+      tags:
+        - stays
+      summary: Updates a specific hospitalization stay
+      operationId: updateStay
+      description: Use this method to update an existing hospitalization stay (change dates, transfer bed, add notes).
+      parameters:
+        - in: path
+          name: departmentId
+          description: pass the id of the particular department
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: stayId
+          description: pass the id of the particular stay
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HospitalizationStay"
+        description: Stay data to update
+        required: true
+      responses:
+        "200":
+          description: Updated stay
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HospitalizationStay"
+        "400":
+          description: Invalid input data
+        "404":
+          description: Department or Stay with such ID does not exist
+    delete:
+      tags:
+        - stays
+      summary: Cancels/ends a hospitalization stay
+      operationId: deleteStay
+      description: Use this method to cancel or end a hospitalization stay.
+      parameters:
+        - in: path
+          name: departmentId
+          description: pass the id of the particular department
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: stayId
+          description: pass the id of the particular stay
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Stay deleted
+        "404":
+          description: Department or Stay with such ID does not exist
 
 components:
   schemas:
-    WaitingListEntry:
+    Department:
       type: object
-      required: [id, patientId, waitingSince, estimatedDurationMinutes]
+      required: [id, name, code]
       properties:
         id:
           type: string
-          example: x321ab3
-          description: Unique id of the entry in this waiting list
+          example: cardiology
+          description: Unique identifier of the department
         name:
           type: string
-          example: Jožko Púčik
-          description: Name of patient in waiting list
+          example: Kardiologické oddelenie
+          description: Human readable display name of the department
+        code:
+          type: string
+          example: KARD
+          description: Short department code
+        reservations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reservation'
+        stays:
+          type: array
+          items:
+            $ref: '#/components/schemas/HospitalizationStay'
+
+    Reservation:
+      type: object
+      required: [id, patientId, patientName, department, reason, from, to]
+      properties:
+        id:
+          type: string
+          example: res-001
+          description: Unique identifier of the reservation
         patientId:
           type: string
           example: 460527-jozef-pucik
-          description: Unique identifier of the patient known to Web-In-Cloud system
-        waitingSince:
+          description: Unique patient identifier
+        patientName:
+          type: string
+          example: Jožko Púčik
+          description: Full name of the patient
+        department:
+          type: string
+          example: cardiology
+          description: Target department ID
+        reason:
+          type: string
+          example: Plánovaná hospitalizácia po operácii srdca
+          description: Reason for the reservation
+        from:
           type: string
           format: date-time
-          example: "2038-12-24T10:05:00Z"
-          description: Timestamp since when the patient entered the waiting list
-        estimatedStart:
+          example: "2025-06-01T08:00:00Z"
+          description: Start date and time of the reservation
+        to:
           type: string
           format: date-time
-          example: "2038-12-24T10:35:00Z"
-          description: Estimated time of entering hospital. Ignored on post.
-        estimatedDurationMinutes:
-          type: integer
-          format: int32
-          example: 15
-          description: >-
-            Estimated duration of hospital visit. If not provided then it will
-            be computed based on condition and hospital settings
-        condition:
-          $ref: "#/components/schemas/Condition"
-    Condition:
+          example: "2025-06-07T12:00:00Z"
+          description: End date and time of the reservation
+        contactInfo:
+          type: string
+          example: "+421 900 123 456"
+          description: Contact information for the patient or referring doctor
+        status:
+          type: string
+          enum: [pending, confirmed, cancelled]
+          example: pending
+          description: Current status of the reservation
+        cancelReason:
+          type: string
+          example: Pacient odmietol hospitalizáciu
+          description: Reason for cancellation (if cancelled)
+        note:
+          type: string
+          example: Vyžaduje jednolôžkovú izbu
+          description: Note from the hospital
+        roomOrAmbulance:
+          type: string
+          example: "Ambulancia 3B"
+          description: Assigned room or ambulance
+
+    HospitalizationStay:
       type: object
-      description: "Describes disease, symptoms, or other reasons of patient   visit"
-      required:
-        - value
-      properties:
-        value:
-          type: string
-          example: Teploty
-        code:
-          type: string
-          example: subfebrilia
-        reference:
-          type: string
-          format: url
-          example: "https://zdravoteka.sk/priznaky/zvysena-telesna-teplota/"
-          description: Link to encyclopedical explanation of the patient's condition
-        typicalDurationMinutes:
-          type: integer
-          format: int32
-          example: 20
-    Hospital:
-      type: object
-      required: [ "id", "name", "roomNumber"]
+      required: [id, patientId, patientName, department, roomNumber, bedNumber, from, to]
       properties:
         id:
           type: string
-          example: dentist-warenova
-          description: Unique identifier of the hospital
-        name:
+          example: stay-001
+          description: Unique identifier of the stay
+        reservationId:
           type: string
-          example: Zubná ambulancia Dr. Warenová
-          description: Human readable display name of the hospital
+          example: res-001
+          description: ID of the linked reservation (optional)
+        patientId:
+          type: string
+          example: 460527-jozef-pucik
+          description: Unique patient identifier
+        patientName:
+          type: string
+          example: Jožko Púčik
+          description: Full name of the patient
+        department:
+          type: string
+          example: cardiology
+          description: Department where the patient is staying
         roomNumber:
           type: string
-          example: 356 - 3.posch
-        waitingList:
-          type: array
-          items:
-            $ref: '#/components/schemas/WaitingListEntry'
-        predefinedConditions:
-          type: array
-          items:
-            $ref: '#/components/schemas/Condition'
+          example: "3B"
+          description: Room number
+        bedNumber:
+          type: string
+          example: "2"
+          description: Bed number within the room
+        from:
+          type: string
+          format: date-time
+          example: "2025-06-01T08:00:00Z"
+          description: Start of hospitalization
+        to:
+          type: string
+          format: date-time
+          example: "2025-06-07T12:00:00Z"
+          description: End of hospitalization
+        status:
+          type: string
+          enum: [planned, active, completed, cancelled]
+          example: planned
+          description: Current status of the stay
+        cancelReason:
+          type: string
+          example: Pacient predčasne prepustený
+          description: Reason for cancellation or early discharge
+        notes:
+          type: string
+          example: Pacient vyžaduje diétu č. 4
+          description: Clinical notes for the stay
+
   examples:
-    WaitingListEntryExample:
-      summary: Ľudomír Zlostný waiting
-      description: |
-        Entry represents a patient waiting in the hospital prep room with
-        defined symptoms
+    DepartmentExample:
+      summary: Kardiologické oddelenie
       value:
-        id: x321ab3
-        name: Ľudomír Zlostný
-        patientId: 74895-ludomir-zlostny
-        waitingSince: "2038-12-24T10:05:00.000Z"
-        estimatedStart: "2038-12-24T10:35:00.000Z"
-        estimatedDurationMinutes: 15
-        condition:
-          value: Nevoľnosť
-          code: nausea
-          reference: "https://zdravoteka.sk/priznaky/nevolnost/"
-    ConditionExample:
-      summary: Conditions and symptoms
-      description: list of few symptoms that can be chosen by patients
+        id: cardiology
+        name: Kardiologické oddelenie
+        code: KARD
+    ReservationExample:
+      summary: Sample reservation
       value:
-        valuee: Teploty
-        code: subfebrilia
-        reference: >-
-          https://zdravoteka.sk/priznaky/zvysena-telesna-teplota/
-    WaitingListEntriesExample:
-      summary: List of waiting patients
-      description: |
-        Example waiting list containing 2 patients
-      value:
-      - id: x321ab3
-        name: Jožko Púčik
+        id: res-001
         patientId: 460527-jozef-pucik
-        waitingSince: "2038-12-24T10:05:00.000Z"
-        estimatedStart: "2038-12-24T10:35:00.000Z"
-        estimatedDurationMinutes: 15
-        condition:
-          value: Teploty
-          code: subfebrilia
-          reference: "https://zdravoteka.sk/priznaky/zvysena-telesna-teplota/"
-      - id: x321ab4
-        name: Ferdinand Trety
-        patientId: 780907-ferdinand-tre
-        waitingSince: "2038-12-24T10:25:00.000Z"
-        estimatedStart: "2038-12-24T10:50:00.000Z"
-        estimatedDurationMinutes: 25
-        condition:
-          value: Nevoľnosť
-          code: nausea
-          reference: "https://zdravoteka.sk/priznaky/nevolnost/"
-    HospitalExample:
-      summary: Sample hospital
-      description: |
-        Example of GP ambulance with waiting list and predefined conditions
+        patientName: Jožko Púčik
+        department: cardiology
+        reason: Plánovaná hospitalizácia po operácii srdca
+        from: "2025-06-01T08:00:00Z"
+        to: "2025-06-07T12:00:00Z"
+        contactInfo: "+421 900 123 456"
+        status: pending
+    ReservationsListExample:
+      summary: List of reservations
       value:
-        id: gp-warenova
-        name: Ambulancia všeobecného lekárstva Dr. Warenová
-        roomNumber: 356 - 3.posch
-        waitingList:
-          - id: x321ab3
-            name: Jožko Púčik
-            patientId: 460527-jozef-pucik
-            waitingSince: "2038-12-24T10:05:00.000Z"
-            estimatedStart: "2038-12-24T10:35:00.000Z"
-            estimatedDurationMinutes: 15
-            condition:
-            value: Teploty
-            code: subfebrilia
-            reference: "https://zdravoteka.sk/priznaky/zvysena-telesna-teplota/"
-          - id: x321ab4
-            name: Ferdinand Trety
-            patientId: 780907-ferdinand-tre
-            waitingSince: "2038-12-24T10:25:00.000Z"
-            estimatedStart: "2038-12-24T10:50:00.000Z"
-            estimatedDurationMinutes: 25
-            condition:
-            value: Nevoľnosť
-            code: nausea
-            reference: "https://zdravoteka.sk/priznaky/nevolnost/"
-        predefinedConditions:
-          - value: Teploty
-            code: subfebrilia
-            reference: "https://zdravoteka.sk/priznaky/zvysena-telesna-teplota/"
-            typicalDurationMinutes: 20
-          - value: Nevoľnosť
-            code: nausea
-            reference: "https://zdravoteka.sk/priznaky/nevolnost/"
-            typicalDurationMinutes: 45
-          - value: Kontrola
-            code: followup
-            typicalDurationMinutes: 15
-          - value: Administratívny úkon
-            code: administration
-            typicalDurationMinutes: 10
-          - value: Odber krvi
-            code: blood-test
-            typicalDurationMinutes: 10
-    ConditionsListExample:
-      summary: Sample of GP ambulance conditions
-      description: |
-        Example list of possible conditions, symptoms, and visit reasons
+        - id: res-001
+          patientId: 460527-jozef-pucik
+          patientName: Jožko Púčik
+          department: cardiology
+          reason: Plánovaná hospitalizácia po operácii srdca
+          from: "2025-06-01T08:00:00Z"
+          to: "2025-06-07T12:00:00Z"
+          status: pending
+        - id: res-002
+          patientId: 780907-ferdinand-tre
+          patientName: Ferdinand Tretí
+          department: cardiology
+          reason: Kontrolné vyšetrenie
+          from: "2025-06-03T09:00:00Z"
+          to: "2025-06-04T15:00:00Z"
+          status: confirmed
+    StayExample:
+      summary: Sample hospitalization stay
       value:
-        - value: Teploty
-          code: subfebrilia
-          reference: "https://zdravoteka.sk/priznaky/zvysena-telesna-teplota/"
-          typicalDurationMinutes: 20
-        - value: Nevoľnosť
-          code: nausea
-          reference: "https://zdravoteka.sk/priznaky/nevolnost/"
-          typicalDurationMinutes: 45
-        - value: Kontrola
-          code: followup
-          typicalDurationMinutes: 15
-        - value: Administratívny úkon
-          code: administration
-          typicalDurationMinutes: 10
-        - value: Odber krvi
-          code: blood-test
-          typicalDurationMinutes: 10
+        id: stay-001
+        reservationId: res-001
+        patientId: 460527-jozef-pucik
+        patientName: Jožko Púčik
+        department: cardiology
+        roomNumber: "3B"
+        bedNumber: "2"
+        from: "2025-06-01T08:00:00Z"
+        to: "2025-06-07T12:00:00Z"
+        status: planned
+    StaysListExample:
+      summary: List of hospitalization stays
+      value:
+        - id: stay-001
+          reservationId: res-001
+          patientId: 460527-jozef-pucik
+          patientName: Jožko Púčik
+          department: cardiology
+          roomNumber: "3B"
+          bedNumber: "2"
+          from: "2025-06-01T08:00:00Z"
+          to: "2025-06-07T12:00:00Z"
+          status: active
+        - id: stay-002
+          patientId: 780907-ferdinand-tre
+          patientName: Ferdinand Tretí
+          department: cardiology
+          roomNumber: "3B"
+          bedNumber: "1"
+          from: "2025-06-03T09:00:00Z"
+          to: "2025-06-05T15:00:00Z"
+          status: planned
