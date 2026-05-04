@@ -6,6 +6,10 @@ import (
 
 // DepartmentsAPI defines operations for managing hospital departments.
 type DepartmentsAPI interface {
+	// GetDepartments Get /api/medbed/departments
+	// Returns list of all departments
+	GetDepartments(c *gin.Context)
+
 	// CreateDepartment Post /api/medbed/department
 	// Creates a new department
 	CreateDepartment(c *gin.Context)

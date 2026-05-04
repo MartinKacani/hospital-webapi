@@ -65,6 +65,12 @@ func getRoutes(handleFunctions ApiHandleFunctions) []Route {
 	return []Route{
 		// Departments
 		{
+			"GetDepartments",
+			http.MethodGet,
+			"/api/medbed/departments",
+			handleFunctions.DepartmentsAPI.GetDepartments,
+		},
+		{
 			"CreateDepartment",
 			http.MethodPost,
 			"/api/medbed/department",

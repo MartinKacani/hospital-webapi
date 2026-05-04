@@ -13,6 +13,29 @@ func NewDepartmentsApi() DepartmentsAPI {
 	return &implDepartmentsAPI{}
 }
 
+func (o implDepartmentsAPI) GetDepartments(c *gin.Context) {
+	value, exists := c.Get("db_service")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "Internal Server Error", "message": "db_service not found"})
+		return
+	}
+	db, ok := value.(db_service.DbService[Department])
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "Internal Server Error", "message": "db_service context is not of expected type"})
+		return
+	}
+	departments, err := db.FindAllDocuments(c)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"status": "Bad Gateway", "message": "Failed to load departments", "error": err.Error()})
+		return
+	}
+	result := make([]Department, 0, len(departments))
+	for _, d := range departments {
+		result = append(result, Department{Id: d.Id, Name: d.Name, Code: d.Code})
+	}
+	c.JSON(http.StatusOK, result)
+}
+
 func (o implDepartmentsAPI) CreateDepartment(c *gin.Context) {
 	value, exists := c.Get("db_service")
 	if !exists {
