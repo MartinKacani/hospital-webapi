@@ -82,6 +82,16 @@ func (o implStaysAPI) CreateStay(c *gin.Context) {
 		}
 
 		department.Stays = append(department.Stays, stay)
+
+		if stay.ReservationId != "" {
+			resIdx := slices.IndexFunc(department.Reservations, func(r Reservation) bool {
+				return r.Id == stay.ReservationId
+			})
+			if resIdx >= 0 && department.Reservations[resIdx].Status == "pending" {
+				department.Reservations[resIdx].Status = "confirmed"
+			}
+		}
+
 		return department, stay, http.StatusOK
 	})
 }
