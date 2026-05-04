@@ -39,6 +39,7 @@ func main() {
 	// Setup database service for Department documents
 	dbService := db_service.NewMongoService[hospital_wl.Department](db_service.MongoServiceConfig{})
 	defer dbService.Disconnect(context.Background())
+	hospital_wl.SeedDepartments(context.Background(), dbService)
 	engine.Use(func(ctx *gin.Context) {
 		ctx.Set("db_service", dbService)
 		ctx.Next()
