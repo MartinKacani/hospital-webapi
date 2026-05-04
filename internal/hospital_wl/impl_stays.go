@@ -17,9 +17,13 @@ func NewStaysApi() StaysAPI {
 
 func (o implStaysAPI) GetStays(c *gin.Context) {
 	updateDepartmentFunc(c, func(c *gin.Context, department *Department) (*Department, interface{}, int) {
+		changed := applyAutoStatus(department)
 		result := department.Stays
 		if result == nil {
 			result = []HospitalizationStay{}
+		}
+		if changed {
+			return department, result, http.StatusOK
 		}
 		return nil, result, http.StatusOK
 	})
@@ -92,6 +96,8 @@ func (o implStaysAPI) GetStay(c *gin.Context) {
 			}, http.StatusBadRequest
 		}
 
+		changed := applyAutoStatus(department)
+
 		idx := slices.IndexFunc(department.Stays, func(s HospitalizationStay) bool {
 			return s.Id == stayId
 		})
@@ -102,6 +108,9 @@ func (o implStaysAPI) GetStay(c *gin.Context) {
 			}, http.StatusNotFound
 		}
 
+		if changed {
+			return department, department.Stays[idx], http.StatusOK
+		}
 		return nil, department.Stays[idx], http.StatusOK
 	})
 }
