@@ -47,6 +47,11 @@ func (this *DbServiceMock[DocType]) DeleteDocument(ctx context.Context, id strin
 	return args.Error(0)
 }
 
+func (this *DbServiceMock[DocType]) FindAllDocuments(ctx context.Context) ([]*DocType, error) {
+	args := this.Called(ctx)
+	return args.Get(0).([]*DocType), args.Error(1)
+}
+
 func (this *DbServiceMock[DocType]) Disconnect(ctx context.Context) error {
 	args := this.Called(ctx)
 	return args.Error(0)
