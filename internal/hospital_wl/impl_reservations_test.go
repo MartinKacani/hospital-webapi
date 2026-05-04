@@ -248,6 +248,66 @@ func (suite *MedBedSuite) Test_CreateStay_ConfirmsLinkedPendingReservation() {
 	)
 }
 
+func (suite *MedBedSuite) Test_DeleteStay_RevertsPendingOnLinkedReservation() {
+	// ARRANGE
+	suite.dbServiceMock = &DbServiceMock[Department]{}
+	suite.dbServiceMock.
+		On("FindDocument", mock.Anything, mock.Anything).
+		Return(
+			&Department{
+				Id: "test-department",
+				Reservations: []Reservation{
+					{
+						Id:     "test-reservation",
+						Status: "confirmed",
+					},
+				},
+				Stays: []HospitalizationStay{
+					{
+						Id:            "test-stay",
+						ReservationId: "test-reservation",
+						PatientId:     "test-patient",
+						RoomNumber:    "10",
+						BedNumber:     "1A",
+						Status:        "planned",
+					},
+				},
+			},
+			nil,
+		)
+	suite.dbServiceMock.
+		On("UpdateDocument", mock.Anything, mock.Anything, mock.Anything).
+		Return(nil)
+
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(recorder)
+	ctx.Set("db_service", suite.dbServiceMock)
+	ctx.Params = []gin.Param{
+		{Key: "departmentId", Value: "test-department"},
+		{Key: "stayId", Value: "test-stay"},
+	}
+	ctx.Request = httptest.NewRequest("DELETE", "/api/medbed/test-department/stays/test-stay", nil)
+
+	sut := implStaysAPI{}
+
+	// ACT
+	sut.DeleteStay(ctx)
+
+	// ASSERT
+	suite.Equal(http.StatusNoContent, recorder.Code)
+	suite.dbServiceMock.AssertCalled(suite.T(), "UpdateDocument", mock.Anything, "test-department",
+		mock.MatchedBy(func(dept *Department) bool {
+			for _, r := range dept.Reservations {
+				if r.Id == "test-reservation" {
+					return r.Status == "pending"
+				}
+			}
+			return false
+		}),
+	)
+}
+
 func (suite *MedBedSuite) Test_ApplyAutoStatus_PlannedBecomesActive() {
 	// ARRANGE
 	dept := &Department{

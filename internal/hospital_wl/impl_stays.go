@@ -214,7 +214,18 @@ func (o implStaysAPI) DeleteStay(c *gin.Context) {
 			}, http.StatusNotFound
 		}
 
+		deletedStay := department.Stays[idx]
 		department.Stays = append(department.Stays[:idx], department.Stays[idx+1:]...)
+
+		if deletedStay.ReservationId != "" {
+			resIdx := slices.IndexFunc(department.Reservations, func(r Reservation) bool {
+				return r.Id == deletedStay.ReservationId
+			})
+			if resIdx >= 0 && department.Reservations[resIdx].Status == "confirmed" {
+				department.Reservations[resIdx].Status = "pending"
+			}
+		}
+
 		return department, nil, http.StatusNoContent
 	})
 }
